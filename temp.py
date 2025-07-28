@@ -140,15 +140,12 @@ def graph(filename):
 
     G = nx.DiGraph()
     net = Network(height="100vh ", width="100%", bgcolor="#ffffff", font_color="black")
-    '''
     for role_id, role_obj in directory_roles_id_list.items():
         G.add_node(f"role_{role_obj.displayName}", type="role", data=role_obj)
-    '''
     print("------")
     for user_id, user_obj in user_id_list.items():
         G.add_node(f"user_{user_obj.userPrincipalName}", type="user", data=user_obj)
     #print(results)
-    '''
     for role, user in results:
         role_node = f"role_{role}"
         user_node = f"user_{user}"
@@ -160,8 +157,6 @@ def graph(filename):
             G.add_node(role_node, type="role")
 
         G.add_edge(role_node, user_node)
-    '''
-    
 
     '''
     pos = nx.spring_layout(G)

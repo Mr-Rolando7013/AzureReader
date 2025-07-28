@@ -1,10 +1,41 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <title>Graph</title>
+    <title>Graph with Sidebar</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            font-family: sans-serif;
+        }
+
+        #sidebar {
+            width: 250px;
+            background: #f0f0f0;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+
+        #graph-container {
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        #graph-container iframe,
+        #graph-container div {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
 </head>
 <body>
-    {{ graph_html|safe }}
+    <div id="sidebar">
+        <h2>Sidebar</h2>
+        <p>Content here (buttons, options, etc).</p>
+    </div>
+    <div id="graph-container">
+        {{ graph_html|safe }}
+    </div>
 </body>
 </html>
