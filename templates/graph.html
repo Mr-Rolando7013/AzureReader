@@ -27,15 +27,203 @@
             width: 100%;
             height: 100%;
         }
+        #sidebar {
+            max-width: 250px;
+            font-family: sans-serif;
+        }
+
+        details {
+            border: 1px solid #ccc;
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        summary {
+            cursor: pointer;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        #user-list {
+            max-height: 200px; /* 👈 Controls visible height */
+            overflow-y: auto;  /* 👈 Enables scroll */
+            padding-right: 5px;
+        }
+
+        .user-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .select-btn {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid gray;
+            background-color: white;
+            margin-right: 10px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .select-btn.selected {
+            background-color: green;
+            border-color: green;
+        }
+        .role-dropdown {
+            margin-bottom: 10px;
+            font-family: sans-serif;
+        }
+        #paths-panel {
+            position: fixed;
+            top: 0;
+            right: -300px; /* Hidden by default */
+            width: 300px;
+            height: 100%;
+            background: #ffffff;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.2);
+            padding: 20px;
+            transition: right 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        #paths-panel.open {
+            right: 0;
+        }
+
+        #toggle-paths {
+            padding: 8px 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .path-item {
+            margin: 8px 0;
+        }
     </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+        const selectedUsers = new Set();
+        const roleDropdownContainer = document.getElementById("user-option-dropdowns");
+
+        document.querySelectorAll(".select-btn").forEach(button => {
+            button.addEventListener("click", () => {
+            const user = button.getAttribute("data-user");
+            const dropdownId = `role-dropdown-${user.replace(/[^a-zA-Z0-9]/g, '')}`;
+
+            if (selectedUsers.has(user)) {
+                    // Deselect user
+                    selectedUsers.delete(user);
+                    button.classList.remove("selected");
+
+                    // Remove the corresponding role dropdown
+                    const existing = document.getElementById(dropdownId);
+                    if (existing) existing.remove();
+
+            } else {
+                // Select user
+                selectedUsers.add(user);
+                button.classList.add("selected");
+
+                // Create and insert dropdown
+                const wrapper = document.createElement("div");
+                wrapper.id = dropdownId;
+                wrapper.className = "role-dropdown";
+                wrapper.innerHTML = `
+                <label>
+                    ${user}:
+                    <select>
+                    <option value="viewer">Viewer</option>
+                    <option value="editor">Editor</option>
+                    <option value="admin">Admin</option>
+                    </select>
+                </label>
+                `;
+                roleDropdownContainer.appendChild(wrapper);
+            }
+            sendSelectedUsers();
+            });
+        });
+        function sendSelectedUsers() {
+            const usersWithRoles = [];
+
+            selectedUsers.forEach(user => {
+            const dropdownId = `role-dropdown-${user.replace(/[^a-zA-Z0-9]/g, '')}`;
+            const dropdown = document.querySelector(`#${dropdownId} select`);
+            const role = dropdown ? dropdown.value : null;
+
+            usersWithRoles.push({
+                userPrincipalName: user,
+                role: role
+            });
+            });
+
+            fetch("/submit-users", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(usersWithRoles)
+            })
+            .then(response => response.json())
+            .then(data => {
+            console.log("Auto-submitted:", data);
+            })
+            .catch(error => {
+            console.error("Auto-submit error:", error);
+            });
+        }
+
+            
+        // Toggle the paths panel
+        const pathsPanel = document.getElementById("paths-panel");
+        const toggleButton = document.getElementById("toggle-paths");
+
+        toggleButton.addEventListener("click", () => {
+            pathsPanel.classList.toggle("open");
+        });
+    });
+    </script>
 </head>
 <body>
     <div id="sidebar">
         <h2>Sidebar</h2>
-        <p>Content here (buttons, options, etc).</p>
+        <p>Users.</p>
+        <details id="user-dropdown" open>
+            <summary>Select Users</summary>
+            <div id="user-list">
+            {% for user in user_list %}
+            <div class="user-item">
+                <button class="select-btn" data-user="{{ user.userPrincipalName }}"></button>
+                <span>{{ user.userPrincipalName }}</span>
+            </div>
+            {% endfor %}
+            </div>
+        </details>
+    <!-- User-specific dropdowns appear here -->
+    <div id="user-option-dropdowns" style="margin-top: 20px;"></div>
+    <!-- Paths Button -->
+    <button id="toggle-paths" style="margin-top: 20px;">Paths</button>
     </div>
     <div id="graph-container">
         {{ graph_html|safe }}
+    </div>
+    <!-- Sliding Paths Panel -->
+    <div id="paths-panel">
+        <h3>Available Paths</h3>
+        <div id="path-list">
+            {% for path in path_list %}
+            <div class="path-item">
+                <label>
+                    <input type="checkbox" name="path" value="{{ path.id }}">
+                    {{ path }}
+                </label>
+            </div>
+            {% endfor %}
+        </div>
     </div>
 </body>
 </html>

@@ -22,6 +22,12 @@ def check_extension(filename):
 def index():
     return render_template("main.html")
 
+@app.route('/submit-users', methods=['POST'])
+def submit_users():
+    data = request.get_json()
+    print("Received:", data)
+    return jsonify({'status': 'success'})
+
 @app.route('/upload', methods=['POST'])
 def upload():
     if 'file' not in request.files:
@@ -170,6 +176,7 @@ def graph(filename):
     nx.draw(G, pos, with_labels=True, node_color=node_colors, edge_color='gray')
     plt.show()
     '''
+    path_list = ["1", "2", "3"]
     for node in G.nodes():
         net.add_node(node, label=str(node))  # You can customize label to show useful info
 
@@ -178,7 +185,7 @@ def graph(filename):
         net.add_edge(source, target)
 
     net_html = net.generate_html()
-    return render_template("graph.html", graph_html=net_html)
+    return render_template("graph.html", graph_html=net_html, user_list=user_list, path_list=path_list)
 
 if __name__ == '__main__':
     app.run(debug=True)
