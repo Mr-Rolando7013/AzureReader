@@ -103,10 +103,56 @@
         .path-item {
             margin: 8px 0;
         }
+        .dropdown {
+            position: relative;
+            display: inline-block;
+            margin: 10px;
+            }
+
+            .dropbtn {
+            background-color: #3498db;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 4px;
+            }
+
+            .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 140px;
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+            z-index: 1;
+            flex-direction: column;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            }
+
+            .dropdown-content button {
+            background: none;
+            border: none;
+            text-align: left;
+            padding: 10px;
+            width: 100%;
+            cursor: pointer;
+            font-size: 14px;
+            }
+
+            .dropdown-content button:hover {
+            background-color: #f1f1f1;
+            }
+
+            .dropdown:hover .dropdown-content {
+            display: flex;
+            }
     </style>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
         const selectedUsers = new Set();
+        const filename = "{{filename}}";
         const roleDropdownContainer = document.getElementById("user-option-dropdowns");
 
         document.querySelectorAll(".select-btn").forEach(button => {
@@ -133,14 +179,14 @@
                 wrapper.id = dropdownId;
                 wrapper.className = "role-dropdown";
                 wrapper.innerHTML = `
-                <label>
-                    ${user}:
-                    <select>
-                    <option value="viewer">Viewer</option>
-                    <option value="editor">Editor</option>
-                    <option value="admin">Admin</option>
-                    </select>
-                </label>
+                <div class="dropdown">
+                    <button class="dropbtn">${user}</button>
+                    <div class="dropdown-content">
+                    <button onclick="updateGraph('${user}', '${filename}')">Get roles</button>
+                    <button onclick="setRole('${user}', 'editor')">Editor</button>
+                    <button onclick="setRole('${user}', 'admin')">Admin</button>
+                    </div>
+                </div>
                 `;
                 roleDropdownContainer.appendChild(wrapper);
             }
@@ -186,6 +232,18 @@
             pathsPanel.classList.toggle("open");
         });
     });
+
+    async function updateGraph(user, filename) {
+        const res = await fetch('/update-graph', {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ user : user, filename : filename })
+        });
+        const result = await res.json()
+        if (result.success) {
+            document.getElementById("graphFrame").src = "/static/graph.html?" + new Date().getTime();
+        }
+    }
     </script>
 </head>
 <body>
@@ -209,7 +267,7 @@
     <button id="toggle-paths" style="margin-top: 20px;">Paths</button>
     </div>
     <div id="graph-container">
-        {{ graph_html|safe }}
+        <iframe id="graphFrame" src="/static/graph.html" width="100%" height="600px" frameborder="0"></iframe>
     </div>
     <!-- Sliding Paths Panel -->
     <div id="paths-panel">
