@@ -4,16 +4,90 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from directoryRole import DirectoryRole
 from user import User
+from roleAssignments import RoleAssignments
+from roleDefinitions import RoleDefinitions
+from administrativeUnits import AdministrativeUnits
 from werkzeug.utils import secure_filename
 
 from pyvis.network import Network
 import os
 import requests
+import json
 
 ALLOWED_EXTENSIONS = {'db',}
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads/'
+
+def getResourceScopesIds(resourceScopes):
+    if resourceScopes:
+        try:
+            scopes = json.loads(resourceScopes)
+        except json.JSONDecodeError:
+            scopes = [resourceScopes]
+
+        scope_ids = [scope.split('/')[-1] if scope != "/" else "tenant" for scope in scopes if scope]
+        return scope_ids
+    return []
+
+def getPrincipals(filename, user):
+    current_path = os.getcwd()
+    db_file = "sqlite:///" + current_path + "\\uploads\\" + filename
+    engine = db.create_engine(db_file)
+    connection = engine.connect()
+    metadata = db.MetaData()
+    metadata.reflect(bind=engine)
+    role_assignments_data = metadata.tables['RoleAssignments']
+    role_definitions_data = metadata.tables['RoleDefinitions']
+    database_user_data = metadata.tables['Users']
+
+    stmt_user = db.select(database_user_data)
+    user_results = connection.execute(stmt_user).fetchall()
+
+    users = [User(*row) for row in user_results]
+
+    user_lookup = {u.objectId: u for u in users}
+
+    stmt_role_assignments = db.select(role_assignments_data)
+    role_assignments_results = connection.execute(stmt_role_assignments).fetchall()
+    role_assignments_list = [RoleAssignments(*row) for row in role_assignments_results]
+
+    stmt_role_definitions = db.select(role_definitions_data)
+    role_definitions_results = connection.execute(stmt_role_definitions).fetchall()
+    role_definitions_list = [RoleDefinitions(*row) for row in role_definitions_results]
+    role_lookup = {rd.objectId: rd for rd in role_definitions_list}
+    role_names = {}
+    user_roles = {}
+
+    # ToDo
+    administrative_units_data = metadata.tables['AdministrativeUnits']
+    
+    for ra in role_assignments_list:
+        scoped_users = []
+        user = user_lookup.get(ra.principalId)
+        role_definition = role_lookup.get(ra.roleDefinitionId)
+        scope_ids = getResourceScopesIds(ra.resourceScopes)
+        #print(" Scope IDs: ", scope_ids)
+        for scope in scope_ids:
+            if scope == "tenant":
+                pass
+            else:
+                scoped_users.append(user_lookup.get(scope))
+                print(" Scope user: ", scoped_users)
+        if user:
+            user_roles.setdefault(user, []).append(ra)
+        if role_definition:
+            role_names.setdefault(role_definition, []).append(ra)
+    
+    for user, roles in user_roles.items():
+        print(f"USER: {user.displayName} ({user.objectId})")
+        for ra in roles:
+            for name in role_names:
+                if ra in role_names[name]:
+                    print("   ROLE:", name.displayName, name.description, ra.resourceScopes, ra.roleDefinitionId)
+            for scoped_user in scoped_users:
+                # print("   SCOPE USER:", scoped_user.displayName if scoped_user else "Unknown", ra.resourceScopes)
+                pass
 
 def readTable(filename, user):
     current_path = os.getcwd()
@@ -61,6 +135,8 @@ def generate_graph(data=None):
         user = data['user']
         filename = data['filename']
         fTableResults, directoryRoleresults, userResults = readTable(filename, user)
+        # Delete later
+        getPrincipals(filename, user)
         G = nx.DiGraph()
         user_obj = userResults[0]
         user_node_id = f"user_{user_obj.userPrincipalName}"
