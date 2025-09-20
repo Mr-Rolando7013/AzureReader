@@ -178,3 +178,78 @@ def graph(filename):
 if __name__ == '__main__':
     app.run(debug=True)
 
+
+
+def getPrincipals(filename, user):
+    current_path = os.getcwd()
+    db_file = "sqlite:///" + current_path + "\\uploads\\" + filename
+    engine = db.create_engine(db_file)
+    connection = engine.connect()
+    metadata = db.MetaData()
+    metadata.reflect(bind=engine)
+    # Get all role data from tables
+    role_assignments_data = metadata.tables['RoleAssignments']
+    role_definitions_data = metadata.tables['RoleDefinitions']
+    # Get all user data from db
+    database_user_data = metadata.tables['Users']
+    # This one is the link between the AU and the users.
+    lnk_au_member_user = metadata.tables['lnk_au_member_user']
+    administrative_units_data = metadata.tables['AdministrativeUnits']
+
+    #Get all AU data from db
+    stmt_lnk_au = db.select(lnk_au_member_user)
+    lnk_au_results = connection.execute(stmt_lnk_au).fetchall()
+    lnk_au_list = [Lnk_au_member_user(*row) for row in lnk_au_results]
+    user_au_lookup = {u.administrativeUnit: u for u in lnk_au_list}
+
+    #print("USER_AU_LOOKUP: ", user_au_lookup)
+
+    # Get al user data from db
+    stmt_user = db.select(database_user_data)
+    user_results = connection.execute(stmt_user).fetchall()
+
+    # Save user data into list of user objects and then save it to a dictionary for easy lookup
+    users = [User(*row) for row in user_results]
+    user_lookup = {u.objectId: u for u in users}
+
+    stmt_role_assignments = db.select(role_assignments_data)
+    role_assignments_results = connection.execute(stmt_role_assignments).fetchall()
+    role_assignments_list = [RoleAssignments(*row) for row in role_assignments_results]
+
+    stmt_role_definitions = db.select(role_definitions_data)
+    role_definitions_results = connection.execute(stmt_role_definitions).fetchall()
+    role_definitions_list = [RoleDefinitions(*row) for row in role_definitions_results]
+    role_lookup = {rd.objectId: rd for rd in role_definitions_list}
+    role_names = {}
+    user_roles = {}
+    
+    # Loop through role assignments to map users to roles and scopes
+    for ra in role_assignments_list:
+        scoped_users = ""
+        user = user_lookup.get(ra.principalId)
+        role_definition = role_lookup.get(ra.roleDefinitionId)
+        
+        #print(" Scope IDs: ", scope_ids)
+        # Find scoped users based on scope IDs. I might need to delete this later.
+        
+        # Map users to their roles
+        if user:
+            user_roles.setdefault(user, []).append(ra)
+        if role_definition:
+            role_names.setdefault(role_definition, []).append(ra)
+    
+    for user, roles in user_roles.items():
+        print(f"USER: {user.displayName} ({user.objectId})")
+        for ra in roles:
+            for name in role_names:
+                if ra in role_names[name]:
+                    print("   ROLE:", name.displayName, name.description, ra.resourceScopes, ra.roleDefinitionId)
+            scope_ids = getResourceScopesIds(ra.resourceScopes)
+            for scope in scope_ids:
+                if scope == "tenant":
+                    pass
+                else:
+                    scoped_user1 = user_au_lookup.get(scope)
+                    if scoped_user1:
+                        scoped_users = (user_lookup.get(scoped_user1.user))
+                    print("   SCOPE USER:", scoped_users.displayName if scoped_users else "Unknown", ra.resourceScopes)

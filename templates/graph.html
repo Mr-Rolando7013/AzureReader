@@ -244,6 +244,18 @@
             document.getElementById("graphFrame").src = "/static/graph.html?" + new Date().getTime();
         }
     }
+
+    async function updateGraphWithRole(role, filename) {
+        const res = await fetch('/update-graph-role', {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ role: role, filename : filename })
+        });
+        const result = await res.json()
+        if (result.success) {
+            document.getElementById("graphFrame").src = "/static/graph.html?" + new Date().getTime();
+        }
+    }
     </script>
 </head>
 <body>
@@ -271,14 +283,13 @@
     </div>
     <!-- Sliding Paths Panel -->
     <div id="paths-panel">
-        <h3>Available Paths</h3>
+        <h3>List all:</h3>
         <div id="path-list">
             {% for path in path_list %}
             <div class="path-item">
-                <label>
-                    <input type="checkbox" name="path" value="{{ path.id }}">
+                <button type="button" onclick="updateGraphWithRole('{{path}}', '{{filename}}')">
                     {{ path }}
-                </label>
+                </button>
             </div>
             {% endfor %}
         </div>
