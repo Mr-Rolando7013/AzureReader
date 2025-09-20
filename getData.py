@@ -104,17 +104,22 @@ def readTableWithRole(filename, roleName):
 def getDataFromRole(filename, roleName):
     user_au_lookup, administrative_units_data, lnk_au_member_user, user_lookup, role_lookup, role_assignments_list = readTableWithRole(filename, roleName)
     # Dictionaries to hold role names and user-role mappings
+    print("Important ROLE LOOKUP:", role_lookup)
     role_names = {}
     user_roles = {}
     roleOutput = []
     userOutput = []
     scopedUsersOutput = []
+    user = ""
+    role_definition = ""
     
     # Loop through role assignments to map users to roles and scopes
     for ra in role_assignments_list:
         scoped_users = ""
-        user = user_lookup.get(ra.principalId)
-        role_definition = role_lookup.get(ra.roleDefinitionId)
+        for role_id, role_obj in role_lookup.items():
+            if ra.roleDefinitionId == role_id:
+                user = user_lookup.get(ra.principalId)
+                role_definition = role_lookup.get(ra.roleDefinitionId)
         
         # Map users to their roles
         if user:
@@ -193,15 +198,24 @@ def generate_graph_with_role(data=None):
         print("OUTPUTTTTTTT: ", roleOutput, scopedUsersOutput, userOutput)
         G = nx.DiGraph()
         for user, role, scope_user in zip(userOutput, roleOutput, scopedUsersOutput):
+            user_id = f"user_{user.userPrincipalName}"
+            role_id = f"role_{role.displayName}"
+            scope_user_id = f"scope_user_{scope_user.userPrincipalName}"
+
             print("JIJIJIJI: ", user.userPrincipalName, role.displayName, scope_user.userPrincipalName)
-            G.add_node(f"user_{user.userPrincipalName}", type="user", data=user)
-            G.add_node(f"role_{role.displayName}", type="role", data=role)
-            G.add_node(f"scope_user_{scope_user.userPrincipalName}", type="scope_user", data=scope_user) if scope_user else None
+            G.add_node(user_id, type="user", data=user.userPrincipalName)
+            G.add_node(role_id, type="role", data=role.displayName)
+            if scope_user:
+                G.add_node(scope_user_id, type="scope_user", data=scope_user.userPrincipalName)
 
-            G.add_edge(user, role, relation="has_role")
-            G.add_edge(role, scope_user, relation="scoped_to") if scope_user else None
+            G.add_edge(user_id, role_id, relation="has_role")
+            if scope_user:
+                G.add_edge(role_id, scope_user_id, relation="scoped_to")
 
-            
+        print("NODES: ", G.nodes(data=True))
+        print("EDGES: ", G.edges(data=True))
+
+         # Create PyVis network
         net = Network(height="100vh ", width="100%", bgcolor="#ffffff", font_color="black")
         net.from_nx(G)
         static_path = os.path.join(os.path.dirname(__file__), "static")

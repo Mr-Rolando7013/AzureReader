@@ -88,8 +88,8 @@
                   
 
                   // parsing and collecting nodes and edges from the python
-                  nodes = new vis.DataSet([{"color": "#97c2fc", "font": {"color": "black"}, "id": "user_dbuser@megabigtech.com", "label": "user_dbuser@megabigtech.com", "shape": "dot"}]);
-                  edges = new vis.DataSet([]);
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "data": "alee@megabigtech.com", "font": {"color": "black"}, "id": "user_alee@megabigtech.com", "label": "user_alee@megabigtech.com", "shape": "dot", "size": 10, "type": "user"}, {"color": "#97c2fc", "data": "User Administrator", "font": {"color": "black"}, "id": "role_User Administrator", "label": "role_User Administrator", "shape": "dot", "size": 10, "type": "role"}, {"color": "#97c2fc", "data": "Felix.Schneider@megabigtech.com", "font": {"color": "black"}, "id": "scope_user_Felix.Schneider@megabigtech.com", "label": "scope_user_Felix.Schneider@megabigtech.com", "shape": "dot", "size": 10, "type": "scope_user"}, {"color": "#97c2fc", "data": "Elena.Georgiou@megabigtech.com", "font": {"color": "black"}, "id": "scope_user_Elena.Georgiou@megabigtech.com", "label": "scope_user_Elena.Georgiou@megabigtech.com", "shape": "dot", "size": 10, "type": "scope_user"}, {"color": "#97c2fc", "data": "Alexandra.Wu@megabigtech.com", "font": {"color": "black"}, "id": "user_Alexandra.Wu@megabigtech.com", "label": "user_Alexandra.Wu@megabigtech.com", "shape": "dot", "size": 10, "type": "user"}]);
+                  edges = new vis.DataSet([{"from": "user_alee@megabigtech.com", "relation": "has_role", "to": "role_User Administrator", "width": 1}, {"from": "role_User Administrator", "relation": "scoped_to", "to": "scope_user_Felix.Schneider@megabigtech.com", "width": 1}, {"from": "role_User Administrator", "relation": "scoped_to", "to": "scope_user_Elena.Georgiou@megabigtech.com", "width": 1}, {"from": "user_Alexandra.Wu@megabigtech.com", "relation": "has_role", "to": "role_User Administrator", "width": 1}]);
 
                   nodeColors = {};
                   allNodes = nodes.get({ returnType: "Object" });
