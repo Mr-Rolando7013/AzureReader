@@ -108,7 +108,7 @@ def graph(filename):
                   "Password Administrator", "Service Support Administrator",
                   "Reports Reader", "Exchange Administrator", "SharePoint Administrator",
                   "Teams Administrator", "Compliance Administrator", "Authentication Administrator",
-                  "Authentication Administrator", "Intune Administrator", "Dynamics 365 Administrator",]
+                  "Intune Administrator", "Dynamics 365 Administrator",]
 
 
     return render_template("graph.html", user_list=user_list, path_list=path_list, filename=filename)
