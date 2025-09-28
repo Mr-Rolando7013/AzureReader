@@ -7,6 +7,7 @@ from getData import getDataFromRole, generate_graph, generate_graph_with_role
 
 from pyvis.network import Network
 import os
+from pathlib import Path
 
 ALLOWED_EXTENSIONS = {'db',}
 
@@ -82,8 +83,9 @@ def upload():
 
 @app.route('/graph/<filename>')
 def graph(filename):
-    current_path = os.getcwd()
-    db_file = "sqlite:///" + current_path + "\\uploads\\" + filename
+    current_path = Path(os.getcwd())
+    db_path = (current_path / "uploads" / filename).as_posix()
+    db_file = "sqlite:///" + db_path
     engine = db.create_engine(db_file)
     connection = engine.connect()
     metadata = db.MetaData()
@@ -115,4 +117,3 @@ def graph(filename):
 
 if __name__ == '__main__':
     app.run(debug=True)
-

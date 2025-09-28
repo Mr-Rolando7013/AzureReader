@@ -11,6 +11,7 @@ import networkx as nx
 from pyvis.network import Network
 
 import os
+from pathlib import Path
 import json
 
 def getResourceScopesIds(resourceScopes):
@@ -25,8 +26,9 @@ def getResourceScopesIds(resourceScopes):
     return []
 
 def readTableWithRole(filename, roleName):
-    current_path = os.getcwd()
-    db_file = "sqlite:///" + current_path + "\\uploads\\" + filename
+    current_path = Path(os.getcwd())
+    db_path = (current_path / "uploads" / filename).as_posix()
+    db_file = "sqlite:///" + db_path
     engine = db.create_engine(db_file)
     connection = engine.connect()
     metadata = db.MetaData()
@@ -115,8 +117,9 @@ def getDataFromRole(filename, roleName):
     return roleOutput, scopedUsersOutput, userOutput
 
 def readTable(filename, user):
-    current_path = os.getcwd()
-    db_file = "sqlite:///" + current_path + "\\uploads\\" + filename
+    current_path = Path(os.getcwd())
+    db_path = (current_path / "uploads" / filename).as_posix()
+    db_file = "sqlite:///" + db_path
     engine = db.create_engine(db_file)
     connection = engine.connect()
     metadata = db.MetaData()
@@ -255,4 +258,3 @@ def generate_graph_with_role(data=None):
         static_path = os.path.join(os.path.dirname(__file__), "static")
         os.makedirs(static_path, exist_ok=True)
         net.save_graph(os.path.join(static_path, "graph.html"))
-
