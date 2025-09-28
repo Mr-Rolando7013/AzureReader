@@ -285,13 +285,12 @@
     <div id="paths-panel">
         <h3>List all:</h3>
         <div id="path-list">
-            {% for path in path_list %}
-            <div class="path-item">
-                <button type="button" onclick="updateGraphWithRole('{{path}}', '{{filename}}')">
-                    {{ path }}
-                </button>
-            </div>
-            {% endfor %}
+            <select id="path-dropdown" onchange="updateGraphWithRole(this.value, '{{filename}}')">
+                <option value="" disabled selected>Select a path</option>
+                {% for path in path_list %}
+                <option value="{{ path }}">{{ path }}</option>
+                {% endfor %}
+        </select>
         </div>
     </div>
 </body>
