@@ -183,7 +183,7 @@
                     <button class="dropbtn">${user}</button>
                     <div class="dropdown-content">
                     <button onclick="updateGraph('${user}', '${filename}')">Get roles</button>
-                    <button onclick="setRole('${user}', 'editor')">Editor</button>
+                    <button onclick="updateGraphForResources('${user}', '${filename}')">Get resources</button>
                     <button onclick="setRole('${user}', 'admin')">Admin</button>
                     </div>
                 </div>
@@ -250,6 +250,18 @@
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({ role: role, filename : filename })
+        });
+        const result = await res.json()
+        if (result.success) {
+            document.getElementById("graphFrame").src = "/static/graph.html?" + new Date().getTime();
+        }
+    }
+
+    async function updateGraphForResources(user, filename) {
+        const res = await fetch('/update-graph-resources', {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ user : user, filename : filename })
         });
         const result = await res.json()
         if (result.success) {

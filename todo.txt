@@ -1,0 +1,13 @@
+SELECT id, displayName, description 
+FROM RoleDefinitions 
+WHERE permissions LIKE '%Microsoft.Authorization/roleAssignments/write%';
+
+Limitations:
+The permissions field in RoleDefinitions is a JSON/text blob, so this string matching works — but it's not structured SQL (unless you parse it).
+
+This shows who is assigned a role that allows them to write role assignments, but doesn't show whether they have scope to actually use it (e.g., limited by scope/condition in Azure).
+
+If RoleAssignments table is populated, it could help determine scope. But most access info in roadrecon is at the directory (tenant) level.
+
+Find KeyVaults
+Managed Identity assignment & operator actions (Microsoft.ManagedIdentity/.../assign/action, Managed Identity Operator)

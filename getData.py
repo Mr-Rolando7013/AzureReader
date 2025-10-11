@@ -6,6 +6,12 @@ from administrativeUnits import AdministrativeUnits
 from lnk_au_member_user import Lnk_au_member_user
 from lnk_role_member_user import Lnk_role_member_user
 from directoryRole import DirectoryRole
+from groups import Groups
+from applications import Applications
+from servicePrincipal import ServicePrincipals
+from lnk_serviceprincipal_owner_user import Lnk_serviceprincipal_owner_user
+from lnk_group_member_user import Lnk_group_member_user
+from lnk_application_owner_user import Lnk_application_owner_user
 
 import networkx as nx
 from pyvis.network import Network
@@ -256,3 +262,138 @@ def generate_graph_with_role(data=None):
         os.makedirs(static_path, exist_ok=True)
         net.save_graph(os.path.join(static_path, "graph.html"))
 
+
+def readTableForResources(filename, user):
+    current_path = os.getcwd()
+    db_file = "sqlite:///" + current_path + "\\uploads\\" + filename
+    engine = db.create_engine(db_file)
+    connection = engine.connect()
+    metadata = db.MetaData()
+    metadata.reflect(bind=engine)
+    lnk_sp_owner_user_data = metadata.tables['lnk_serviceprincipal_owner_user']
+    service_principals_data = metadata.tables['ServicePrincipals']
+    applications_data = metadata.tables['Applications']
+    database_user_data = metadata.tables['Users']
+    lnk_group_member_user_data = metadata.tables['lnk_group_member_user']
+    groups_data = metadata.tables['Groups']
+    lnk_application_owner_user_data = metadata.tables['lnk_application_owner_user']
+
+    stmt_user = db.select(database_user_data)
+    user_results = connection.execute(stmt_user).fetchall()
+    user_list = [User(*row) for row in user_results]
+    user_lookup = {u.objectId: u for u in user_list if u.userPrincipalName == user}
+
+    print("USERLOOKUP: ", user_lookup)
+
+    stmt_lnk_sp_owner_user = db.select(lnk_sp_owner_user_data)
+    lnk_sp_owner_results = connection.execute(stmt_lnk_sp_owner_user).fetchall()
+    lnk_sp_owner_list = [Lnk_serviceprincipal_owner_user(*row) for row in lnk_sp_owner_results]
+
+    stmt_service_principals = db.select(service_principals_data)
+    service_principals_results = connection.execute(stmt_service_principals).fetchall()
+    service_principals_list = [ServicePrincipals(*row) for row in service_principals_results]
+
+    stmt_applications = db.select(applications_data)
+    applications_results = connection.execute(stmt_applications).fetchall()
+    applications_list = [Applications(*row) for row in applications_results]
+
+    stmt_lnk_group_member_user = db.select(lnk_group_member_user_data)
+    lnk_group_member_results = connection.execute(stmt_lnk_group_member_user).fetchall()
+    lnk_group_member_list = [Lnk_group_member_user(*row) for row in lnk_group_member_results]
+
+    stmt_groups = db.select(groups_data)
+    groups_results = connection.execute(stmt_groups).fetchall()
+    groups_list = [Groups(*row) for row in groups_results]
+
+    stmt_lnk_application_owner_user = db.select(lnk_application_owner_user_data)
+    lnk_application_owner_results = connection.execute(stmt_lnk_application_owner_user).fetchall()
+    lnk_application_owner_list = [Lnk_application_owner_user(*row) for row in lnk_application_owner_results]
+
+    user_app_pairs = []
+    user_group_pairs = []
+    user_sp_pairs = []
+
+    for lnk in lnk_application_owner_list:
+            user = user_lookup.get(lnk.user)
+            application_lk = next((dr for dr in applications_list if dr.objectId == lnk.application), None)
+            if user and application_lk:
+                user_app_pairs.append((user, application_lk))
+
+    for lnk in lnk_group_member_list:
+            user = user_lookup.get(lnk.user)
+            group_lk = next((dr for dr in groups_list if dr.objectId == lnk.group), None)
+            if user and group_lk:
+                user_group_pairs.append((user, group_lk))
+    
+    for lnk in lnk_sp_owner_list:
+            user = user_lookup.get(lnk.user)
+            sp_lk = next((dr for dr in service_principals_list if dr.objectId == lnk.servicePrincipal), None)
+            if user and sp_lk:
+                user_sp_pairs.append((user, sp_lk))
+
+    return user_app_pairs, user_group_pairs, user_sp_pairs
+
+
+def generate_graph_for_resources(data=None):
+    if data == None:
+        pass
+    else:
+        user = data['user']
+        filename = data['filename']
+        user_app_pairs, user_group_pairs, user_sp_pairs = readTableForResources(filename, user)
+        G = nx.DiGraph()
+
+        if user_app_pairs:
+            for i, (user_obj, app_obj) in enumerate(user_app_pairs):
+                user_node_id = f"user_{user_obj.userPrincipalName}"
+                app_obj_id = f"app_{app_obj.displayName}_{i}"
+                G.add_node(f"{user_node_id}", type="user" ,data=user_obj.userPrincipalName)
+                G.add_node(f"{app_obj_id}", type="application", data=app_obj.displayName)
+                
+                G.add_edge(user_node_id, app_obj_id, relation="owns_application", label="owns_application")
+
+        if user_group_pairs:
+            for i, (user_obj, group_obj) in enumerate(user_group_pairs):
+                user_node_id = f"user_{user_obj.userPrincipalName}"
+                group_obj_id = f"group_{group_obj.displayName}_{i}"
+                G.add_node(f"{user_node_id}", type="user" ,data=user_obj.userPrincipalName)
+                G.add_node(f"{group_obj_id}", type="group", data=group_obj.displayName)
+                
+                G.add_edge(user_node_id, group_obj_id, relation="member_of_group", label="member_of_group")
+
+        if user_sp_pairs:
+            for i, (user_obj, sp_obj) in enumerate(user_sp_pairs):
+                user_node_id = f"user_{user_obj.userPrincipalName}"
+                sp_obj_id = f"sp_{sp_obj.appDisplayName}_{i}"
+                G.add_node(f"{user_node_id}", type="user" ,data=user_obj.userPrincipalName)
+                G.add_node(f"{sp_obj_id}", type="service_principal", data=sp_obj.appDisplayName)
+                
+                G.add_edge(user_node_id, sp_obj_id, relation="owns_service_principal", label="owns_service_principal")
+
+        # Create PyVis network
+        net = Network(height="100vh ", width="100%", bgcolor="#ffffff", font_color="black", directed=True)
+
+        # Hierarchical layout
+        net.barnes_hut()
+
+        net.set_options("""
+            {
+            "layout": {
+                "hierarchical": {
+                "enabled": true,
+                "direction": "LR",
+                "sortMethod": "directed",
+                "nodeSpacing": 200,
+                "levelSeparation": 250
+                }
+            },
+            "physics": {
+                "enabled": false
+            }
+            }
+            """)
+
+        net.from_nx(G)
+        static_path = os.path.join(os.path.dirname(__file__), "static")
+        os.makedirs(static_path, exist_ok=True)
+        net.save_graph(os.path.join(static_path, "graph.html"))

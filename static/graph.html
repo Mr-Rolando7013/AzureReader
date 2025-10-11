@@ -88,8 +88,8 @@
                   
 
                   // parsing and collecting nodes and edges from the python
-                  nodes = new vis.DataSet([{"color": "#97c2fc", "data": "alee@megabigtech.com", "font": {"color": "black"}, "id": "user_alee@megabigtech.com", "label": "user_alee@megabigtech.com", "shape": "dot", "size": 10, "type": "user"}, {"color": "#97c2fc", "data": "Directory Readers", "font": {"color": "black"}, "id": "role_Directory Readers", "label": "role_Directory Readers", "shape": "dot", "size": 10, "type": "role"}, {"color": "#97c2fc", "data": "User Administrator", "font": {"color": "black"}, "id": "role_User Administrator", "label": "role_User Administrator", "shape": "dot", "size": 10, "type": "role"}]);
-                  edges = new vis.DataSet([{"from": "user_alee@megabigtech.com", "label": "has_role", "relation": "has_role", "to": "role_Directory Readers", "width": 1}, {"from": "user_alee@megabigtech.com", "label": "has_role", "relation": "has_role", "to": "role_User Administrator", "width": 1}]);
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "data": "alee@megabigtech.com", "font": {"color": "black"}, "id": "user_alee@megabigtech.com", "label": "user_alee@megabigtech.com", "shape": "dot", "size": 10, "type": "user"}, {"color": "#97c2fc", "data": "User Administrator", "font": {"color": "black"}, "id": "role_User Administrator_0", "label": "role_User Administrator_0", "shape": "dot", "size": 10, "type": "role"}, {"color": "#97c2fc", "data": "Felix.Schneider@megabigtech.com", "font": {"color": "black"}, "id": "scope_user_Felix.Schneider@megabigtech.com_0", "label": "scope_user_Felix.Schneider@megabigtech.com_0", "shape": "dot", "size": 10, "type": "scope_user"}, {"color": "#97c2fc", "data": "Alexandra.Wu@megabigtech.com", "font": {"color": "black"}, "id": "user_Alexandra.Wu@megabigtech.com", "label": "user_Alexandra.Wu@megabigtech.com", "shape": "dot", "size": 10, "type": "user"}, {"color": "#97c2fc", "data": "User Administrator", "font": {"color": "black"}, "id": "role_User Administrator_1", "label": "role_User Administrator_1", "shape": "dot", "size": 10, "type": "role"}, {"color": "#97c2fc", "data": "Elena.Georgiou@megabigtech.com", "font": {"color": "black"}, "id": "scope_user_Elena.Georgiou@megabigtech.com_1", "label": "scope_user_Elena.Georgiou@megabigtech.com_1", "shape": "dot", "size": 10, "type": "scope_user"}]);
+                  edges = new vis.DataSet([{"arrows": "to", "from": "user_alee@megabigtech.com", "label": "has_role", "relation": "has_role", "to": "role_User Administrator_0", "width": 1}, {"arrows": "to", "from": "role_User Administrator_0", "label": "scoped_to", "relation": "scoped_to", "to": "scope_user_Felix.Schneider@megabigtech.com_0", "width": 1}, {"arrows": "to", "from": "user_Alexandra.Wu@megabigtech.com", "label": "has_role", "relation": "has_role", "to": "role_User Administrator_1", "width": 1}, {"arrows": "to", "from": "role_User Administrator_1", "label": "scoped_to", "relation": "scoped_to", "to": "scope_user_Elena.Georgiou@megabigtech.com_1", "width": 1}]);
 
                   nodeColors = {};
                   allNodes = nodes.get({ returnType: "Object" });
@@ -100,35 +100,7 @@
                   // adding nodes and edges to the graph
                   data = {nodes: nodes, edges: edges};
 
-                  var options = {
-    "configure": {
-        "enabled": false
-    },
-    "edges": {
-        "color": {
-            "inherit": true
-        },
-        "smooth": {
-            "enabled": true,
-            "type": "dynamic"
-        }
-    },
-    "interaction": {
-        "dragNodes": true,
-        "hideEdgesOnDrag": false,
-        "hideNodesOnDrag": false
-    },
-    "physics": {
-        "enabled": true,
-        "stabilization": {
-            "enabled": true,
-            "fit": true,
-            "iterations": 1000,
-            "onlyDynamicEdges": false,
-            "updateInterval": 50
-        }
-    }
-};
+                  var options = {"layout": {"hierarchical": {"enabled": true, "direction": "LR", "sortMethod": "directed", "nodeSpacing": 200, "levelSeparation": 250}}, "physics": {"enabled": false}};
 
                   
 

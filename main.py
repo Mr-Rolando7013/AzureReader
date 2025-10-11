@@ -3,7 +3,7 @@ import sqlalchemy as db
 from user import User
 from werkzeug.utils import secure_filename
 
-from getData import getDataFromRole, generate_graph, generate_graph_with_role
+from getData import *
 
 from pyvis.network import Network
 import os
@@ -20,6 +20,18 @@ def check_extension(filename):
 @app.route('/')
 def index():
     return render_template("main.html")
+
+@app.route('/update-graph-resources', methods=['POST'])
+def list_resources():
+    user = request.json.get("user")
+    filename = request.json.get("filename")
+    data = {
+        "user" : user,
+        "filename" : filename
+    }
+    print("DATAAAA: ", data)
+    generate_graph_for_resources(data)
+    return jsonify({"success" : True})
 
 @app.route('/update-graph-role', methods=['POST'])
 def update_graph_roles():
