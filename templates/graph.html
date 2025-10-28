@@ -3,151 +3,174 @@
 <head>
     <title>Graph with Sidebar</title>
     <style>
-        body {
-            margin: 0;
-            display: flex;
-            height: 100vh;
-            font-family: sans-serif;
-        }
+        * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
 
-        #sidebar {
-            width: 250px;
-            background: #f0f0f0;
-            padding: 20px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-        }
+body {
+    display: flex;
+    height: 100vh;
+    background: #f0f4f8;
+}
 
-        #graph-container {
-            flex-grow: 1;
-            overflow: hidden;
-        }
+/* Sidebar */
+#sidebar {
+    width: 250px;
+    background: #f7f9fc;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+}
 
-        #graph-container iframe,
-        #graph-container div {
-            width: 100%;
-            height: 100%;
-        }
-        #sidebar {
-            max-width: 250px;
-            font-family: sans-serif;
-        }
+#sidebar .logo {
+    width: 100px;
+    border-radius: 50%;
+    margin-bottom: 15px;
+}
 
-        details {
-            border: 1px solid #ccc;
-            padding: 8px;
-            border-radius: 4px;
-            margin-bottom: 10px;
-        }
+details {
+    border: 1px solid #ccc;
+    padding: 8px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    background: #fff;
+}
 
-        summary {
-            cursor: pointer;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
+summary {
+    cursor: pointer;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
 
-        #user-list {
-            max-height: 200px; /* 👈 Controls visible height */
-            overflow-y: auto;  /* 👈 Enables scroll */
-            padding-right: 5px;
-        }
+#user-list {
+    max-height: 200px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
 
-        .user-item {
-            display: flex;
-            align-items: center;
-            margin: 5px 0;
-        }
+.user-item {
+    display: flex;
+    align-items: center;
+    margin: 5px 0;
+}
 
-        .select-btn {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            border: 2px solid gray;
-            background-color: white;
-            margin-right: 10px;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
+.select-btn {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid gray;
+    background-color: white;
+    margin-right: 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
 
-        .select-btn.selected {
-            background-color: green;
-            border-color: green;
-        }
-        .role-dropdown {
-            margin-bottom: 10px;
-            font-family: sans-serif;
-        }
-        #paths-panel {
-            position: fixed;
-            top: 0;
-            right: -300px; /* Hidden by default */
-            width: 300px;
-            height: 100%;
-            background: #ffffff;
-            box-shadow: -2px 0 5px rgba(0,0,0,0.2);
-            padding: 20px;
-            transition: right 0.3s ease;
-            z-index: 1000;
-            overflow-y: auto;
-        }
+.select-btn.selected {
+    background-color: green;
+    border-color: green;
+}
 
-        #paths-panel.open {
-            right: 0;
-        }
+/* Main content */
+#main-content {
+    flex-grow: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
 
-        #toggle-paths {
-            padding: 8px 16px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+#graphFrame {
+    flex-grow: 1;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
 
-        .path-item {
-            margin: 8px 0;
-        }
-        .dropdown {
-            position: relative;
-            display: inline-block;
-            margin: 10px;
-            }
+/* User dropdown panel */
+.dropdown-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
 
-            .dropbtn {
-            background-color: #3498db;
-            color: white;
-            padding: 8px 12px;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            border-radius: 4px;
-            }
+.role-dropdown {
+    font-family: sans-serif;
+}
 
-            .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: white;
-            min-width: 140px;
-            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
-            z-index: 1;
-            flex-direction: column;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            }
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
 
-            .dropdown-content button {
-            background: none;
-            border: none;
-            text-align: left;
-            padding: 10px;
-            width: 100%;
-            cursor: pointer;
-            font-size: 14px;
-            }
+.dropbtn {
+    background-color: #3498db;
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    border-radius: 4px;
+}
 
-            .dropdown-content button:hover {
-            background-color: #f1f1f1;
-            }
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: white;
+    min-width: 140px;
+    box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+    z-index: 1;
+    flex-direction: column;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
 
-            .dropdown:hover .dropdown-content {
-            display: flex;
-            }
+.dropdown-content button {
+    background: none;
+    border: none;
+    text-align: left;
+    padding: 10px;
+    width: 100%;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.dropdown-content button:hover {
+    background-color: #f1f1f1;
+}
+
+.dropdown:hover .dropdown-content {
+    display: flex;
+}
+
+/* Paths panel */
+#paths-panel {
+    width: 300px;
+    background: #fff;
+    position: fixed;
+    top: 0;
+    right: -300px;
+    height: 100%;
+    padding: 20px;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.2);
+    transition: right 0.3s ease;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+#paths-panel.open {
+    right: 0;
+}
+
+/* Paths button */
+#toggle-paths {
+    margin-top: 20px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-weight: bold;
+}
     </style>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -272,38 +295,39 @@
 </head>
 <body>
     <div id="sidebar">
-        <h2>Sidebar</h2>
-        <p>Users.</p>
+        <img src="{{ url_for('static', filename='supuestamenteGustavo.jpg') }}" class="logo">
+        <h2>Azure Reader</h2>
+
         <details id="user-dropdown" open>
             <summary>Select Users</summary>
             <div id="user-list">
-            {% for user in user_list %}
-            <div class="user-item">
-                <button class="select-btn" data-user="{{ user.userPrincipalName }}"></button>
-                <span>{{ user.userPrincipalName }}</span>
-            </div>
-            {% endfor %}
+                {% for user in user_list %}
+                <div class="user-item">
+                    <button class="select-btn" data-user="{{ user.userPrincipalName }}"></button>
+                    <span>{{ user.userPrincipalName }}</span>
+                </div>
+                {% endfor %}
             </div>
         </details>
-    <!-- User-specific dropdowns appear here -->
-    <div id="user-option-dropdowns" style="margin-top: 20px;"></div>
-    <!-- Paths Button -->
-    <button id="toggle-paths" style="margin-top: 20px;">Paths</button>
+
+        <button id="toggle-paths">Show Paths</button>
     </div>
-    <div id="graph-container">
-        <iframe id="graphFrame" src="/static/graph.html" width="100%" height="600px" frameborder="0"></iframe>
+
+    <div id="main-content">
+        <iframe id="graphFrame" src="/static/graph.html" frameborder="0"></iframe>
+
+        <!-- User-specific dropdowns appear here -->
+        <div id="user-option-dropdowns" class="dropdown-panel"></div>
     </div>
-    <!-- Sliding Paths Panel -->
+
     <div id="paths-panel">
         <h3>List all:</h3>
-        <div id="path-list">
-            <select id="path-dropdown" onchange="updateGraphWithRole(this.value, '{{filename}}')">
-                <option value="" disabled selected>Select a path</option>
-                {% for path in path_list %}
-                <option value="{{ path }}">{{ path }}</option>
-                {% endfor %}
+        <select id="path-dropdown" onchange="updateGraphWithRole(this.value, '{{filename}}')">
+            <option value="" disabled selected>Select a path</option>
+            {% for path in path_list %}
+            <option value="{{ path }}">{{ path }}</option>
+            {% endfor %}
         </select>
-        </div>
     </div>
 </body>
 </html>
