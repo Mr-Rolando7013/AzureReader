@@ -187,6 +187,7 @@ def identifyKerberoastableAccounts(json_users_file):
 
         if enabled and spn:
             kerberoastable_users.append({
+                'attackName': 'kerberoasting',
                 "name": property.get("name"),
                 "spns": property
             })
@@ -205,6 +206,7 @@ def identifyAsRepRoast(json_users_file):
 
         if preauth:
             asrepRoastUsers.append({
+                'attackName': 'asRepRoasting',
                 'name': property.get("name"),
                 'spns': property
             })
@@ -231,10 +233,11 @@ def identifyTargetedKerberoast(json_users_file):
             if name in dangerousPrivs:
                 potentialAttacker = retrieveNameFromSid(right.get("PrincipalSID", ""))
                 targetedKerberoast.append({
-                    'rightName': name,
-                    'targetAccount': property.get("name"),
-                    'rightInfo': right,
-                    'potentialAttacker': potentialAttacker
+                    'attackName':'targetedKerberoast',
+                    'permission': name,
+                    'target': property.get("name"),
+                    'principal_type': right.get("PrincipalType", ''),
+                    'principal': potentialAttacker
 
                 })
 
@@ -255,10 +258,11 @@ def identifyAddMember(json_users_file):
             if name in dangerousPrivs:
                 potentialAttacker = retrieveNameFromSid(right.get("PrincipalSID", ""))
                 addMembers.append({
-                    'rightName': name,
-                    'targetAccount': property.get("name"),
-                    'rightInfo': right,
-                    'potentialAttacker': potentialAttacker
+                    'attackName': 'addMember',
+                    'permission': name,
+                    'target': property.get("name"),
+                    'principal_type': right.get("PrincipalType", ''),
+                    'principal': potentialAttacker
                 })
     return addMembers
 
@@ -278,10 +282,11 @@ def forceChangePassword(json_users_file):
             if name in dangerousPrivs:
                 potentialAttacker = retrieveNameFromSid(right.get("PrincipalSID", ""))
                 forceChangeUsers.append({
-                    'rightName': name,
-                    'targetAccount': property.get("name"),
-                    'rightInfo': right,
-                    'potentialAttacker': potentialAttacker
+                    'attackName': 'ForceChangePassword',
+                    'permission': name,
+                    'target': property.get("name"),
+                    'principal_type': right.get("PrincipalType", ''),
+                    'principal': potentialAttacker
                 })
     return forceChangeUsers
 
@@ -300,12 +305,27 @@ def identifyingRightsGrantingAndOwnership(json_users_file):
             if name in dangerousPrivs:
                 potentialAttacker = retrieveNameFromSid(right.get("PrincipalSID", ""))
                 grantsAndOwnerships.append({
-                    'rightName': name,
-                    'targetAccount': property.get("name"),
-                    'rightInfo': right,
-                    'potentialAttacker': potentialAttacker
+                    'attackName': 'GrantingRightsAndOwnership',
+                    'permission': name,
+                    'target': property.get("name"),
+                    'principal_type': right.get("PrincipalType", ''),
+                    'principal': potentialAttacker
                 })
     return grantsAndOwnerships
+
+def exportData(data):
+    finalJson = []
+    i = 1
+    for value in data:
+        temp = {}
+        graphConditions = []
+        riskModifiers = []
+        temp2 = {}
+        temp3 = {}
+        temp["attack_id"] = f"AD-{i}"
+        temp["name"] = value["attackName"]
+        
+        i+=1
 
 if __name__ == '__main__':
     computers_file = 'bloodhound/20260407101035_computers.json'
@@ -319,7 +339,9 @@ if __name__ == '__main__':
     #print(identifyKerberoastableAccounts(file_name))
     #print(identifyAsRepRoast(file_name))
     #print(identifyTargetedKerberoast(file_name))
-    print(identifyAddMember(users_file))
+    data = identifyAddMember(users_file)
+    print(data)
+    exportData(data)
     #loadSIDs(computers_file, containers_file,
              #domains_file, gpos_file, groups_file,
              #ous_file, users_file)
