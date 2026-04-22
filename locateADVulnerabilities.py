@@ -212,106 +212,52 @@ def identifyAsRepRoast(json_users_file):
             })
 
     return asrepRoastUsers
-# I will exlude machine accounts, because: 
-# Cracking the ticket is usually pointless (strong password)
-# Doesn’t lead to privilege escalation in most cases
-# TO-DO: Exlude machine accounts
-def identifyTargetedKerberoast(json_users_file):
-    with open(json_users_file, 'r') as f:
-        data = json.load(f)
 
-    targetedKerberoast = []
+def retrieveDACLs(files):
+    data = []
 
-    # Delete WriteProperty and Validated-SPN?
-    dangerousPrivs = ["GenericAll", "GenericWrite", "WriteProperty", "WriteSPN", "Validated-SPN"]
-    
-    for user in data.get("data", []):
+    for file in files:
+        with open(file, 'r') as f:
+            content = json.load(f)
+            data.extend(content.get("data", []))
+
+    return data
+
+"""
+def retrieveDACLs(files):
+    data = []
+    dangerousPrivs = ["GenericAll", "GenericWrite", "WriteProperty", "WriteSPN", "Validated-SPN",
+                      "Self", "AllExtendedRights", "Self-Membership", "User-Force-Change-Password",
+                      "ForceChangePassword", "ReadLAPSPassword", "ReadGMSAPassword", "Owns", "WriteDacl"]
+    for file in files:
+        with open(file, 'r') as f:
+            content = json.load(f)
+            data.extend(content.get("data", []))
+
+    dacls = []
+    for user in data:
         property = user.get("Properties", [])
+        dc_nodes = {
+            node for node, props in nodes.items()
+            if props.get("isDomainController") is True
+        }
         aces = user.get("Aces", [])
         for right in aces:
             name = right.get("RightName", False)
             if name in dangerousPrivs:
                 potentialAttacker = retrieveNameFromSid(right.get("PrincipalSID", ""))
-                targetedKerberoast.append({
+                dacls.append({
                     'attackName':'targetedKerberoast',
                     'permission': name,
-                    'target': property.get("name"),
+                    'target': property.get("name").split("@")[0].upper(),
                     'principal_type': right.get("PrincipalType", ''),
-                    'principal': potentialAttacker
+                    'principal': potentialAttacker.split("@")[0].upper()
 
                 })
 
-    return targetedKerberoast
-
-def identifyAddMember(json_users_file):
-    with open(json_users_file, 'r') as f:
-        data = json.load(f)
-
-    addMembers = []
-    dangerousPrivs = ["GenericAll", "GenericWrite", "Self", "AllExtendedRights", "Self-Membership"]
-
-    for user in data.get("data", []):
-        property = user.get("Properties", [])
-        aces = user.get('Aces', [])
-        for right in aces:
-            name = right.get("RightName", False)
-            if name in dangerousPrivs:
-                potentialAttacker = retrieveNameFromSid(right.get("PrincipalSID", ""))
-                addMembers.append({
-                    'attackName': 'addMember',
-                    'permission': name,
-                    'target': property.get("name"),
-                    'principal_type': right.get("PrincipalType", ''),
-                    'principal': potentialAttacker
-                })
-    return addMembers
-
-def forceChangePassword(json_users_file):
-    with open(json_users_file, 'r') as f:
-        data = json.load(f)
-
-    forceChangeUsers = []
-    dangerousPrivs = ["GenericAll", "AllExtendedRights", "User-Force-Change-Password", "ForceChangePassword",
-                      "ReadLAPSPassword", "ReadGMSAPassword"]
-
-    for user in data.get("data", []):
-        property = user.get("Properties", [])
-        aces = user.get("Aces", [])
-        for right in aces:
-            name = right.get("RightName", False)
-            if name in dangerousPrivs:
-                potentialAttacker = retrieveNameFromSid(right.get("PrincipalSID", ""))
-                forceChangeUsers.append({
-                    'attackName': 'ForceChangePassword',
-                    'permission': name,
-                    'target': property.get("name"),
-                    'principal_type': right.get("PrincipalType", ''),
-                    'principal': potentialAttacker
-                })
-    return forceChangeUsers
-
-def identifyingRightsGrantingAndOwnership(json_users_file):
-    with open(json_users_file, 'r') as f:
-        data = json.load(f)
-
-    grantsAndOwnerships = []
-    dangerousPrivs = ["Owns", "WriteDacl"]
-
-    for user in data.get("data", []):
-        property = user.get("Properties", [])
-        aces = user.get('Aces', [])
-        for right in aces:
-            name = right.get("RightName", False)
-            if name in dangerousPrivs:
-                potentialAttacker = retrieveNameFromSid(right.get("PrincipalSID", ""))
-                grantsAndOwnerships.append({
-                    'attackName': 'GrantingRightsAndOwnership',
-                    'permission': name,
-                    'target': property.get("name"),
-                    'principal_type': right.get("PrincipalType", ''),
-                    'principal': potentialAttacker
-                })
-    return grantsAndOwnerships
+    return dacls
+"""
+    
 
 def exportData(data):
     finalJson = []
